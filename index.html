@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的像素音乐盒 - v13.1 澎湃音效版</title>
+    <title>我的像素音乐盒 - v13.2 终极修复版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=DotGothic16&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -166,9 +166,16 @@
             z-index: 100; pointer-events: none; 
             transform: translateY(124px); opacity: 0;
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
-            overflow: visible; 
+            overflow: visible; /* 保持可见，让马里奥冒出来 */
         }
         .global-lyrics-bar.show { transform: translateY(0); opacity: 1; }
+
+        /* 🌟 核心修复：添加专属遮罩层，裁剪多余歌词，严格保留 3 行 (120px高度) */
+        .lyrics-mask {
+            width: 100%; height: 120px; 
+            overflow: hidden; /* 裁剪掉超过120px高度的文字！ */
+            position: relative;
+        }
 
         /* 水管马里奥 */
         .mario-pipe-pop {
@@ -219,7 +226,7 @@
     <div class="top-nav">
         <div class="nav-logo-area">
             <img class="mario-hello-logo" src="./images2/mario-hello.png" alt="Mario Hello">
-            <h1>我的像素音乐盒 v13.1</h1>
+            <h1>我的像素音乐盒 v13.2</h1>
         </div>
         <button class="random-btn" onclick="playRandom();">
             随机播放 <span style="font-family: 'Press Start 2P', cursive; font-size: 10px;">&#9654;</span>
@@ -268,7 +275,9 @@
 
     <div class="global-lyrics-bar" id="lrc-container">
         <img class="mario-pipe-pop" id="mario-pop" src="./images2/mario-pipe.png" alt="Mario Pipe">
-        <div class="global-lyric-wrapper" id="lrc-wrapper"></div>
+        <div class="lyrics-mask">
+            <div class="global-lyric-wrapper" id="lrc-wrapper"></div>
+        </div>
     </div>
 
     <script>
@@ -310,7 +319,7 @@
             osc.type = 'square'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); 
             osc.frequency.exponentialRampToValueAtTime(freq/2, audioCtx.currentTime + 0.05);
             
-            // 🌟 调大这里：从0.08提升到0.4，增加5倍交互音量！
+            // 🌟 核心修复：提升 GainNode 到 1.5，按键音量暴增！
             gain.gain.setValueAtTime(1.5, audioCtx.currentTime); 
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
             
