@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的像素音乐盒 - v13.2 终极修复版</title>
+    <title>我的像素音乐盒 - v14.0 自适应版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=DotGothic16&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -66,7 +66,6 @@
             padding: 2.5rem 2rem; position: relative; z-index: 10;
         }
 
-        /* 星星无敌闪烁状态 */
         @keyframes starPowerFlashing {
             0% { background-color: #E52521; }
             20% { background-color: #FFD700; }
@@ -103,10 +102,7 @@
             animation: pressStartBlink 1s infinite; z-index: 10; pointer-events: none; width: 100%; text-align: center;
             line-height: 1.5;
         }
-        @keyframes pressStartBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
+        @keyframes pressStartBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         .turntable-platter img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; opacity: 0; transition: opacity 0.5s; }
         .center-hole { width: 60px; height: 60px; background-color: #111; border-radius: 50%; position: absolute; z-index: 2; border: 2px solid #333; }
@@ -166,16 +162,11 @@
             z-index: 100; pointer-events: none; 
             transform: translateY(124px); opacity: 0;
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
-            overflow: visible; /* 保持可见，让马里奥冒出来 */
+            overflow: visible; 
         }
         .global-lyrics-bar.show { transform: translateY(0); opacity: 1; }
 
-        /* 🌟 核心修复：添加专属遮罩层，裁剪多余歌词，严格保留 3 行 (120px高度) */
-        .lyrics-mask {
-            width: 100%; height: 120px; 
-            overflow: hidden; /* 裁剪掉超过120px高度的文字！ */
-            position: relative;
-        }
+        .lyrics-mask { width: 100%; height: 120px; overflow: hidden; position: relative; }
 
         /* 水管马里奥 */
         .mario-pipe-pop {
@@ -186,11 +177,7 @@
         }
         .global-lyrics-bar.show .mario-pipe-pop { transform: translateY(0); opacity: 1; }
         .mario-pipe-pop.jump { animation: marioJump 0.4s ease-out; }
-        @keyframes marioJump {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-50px); } 
-            100% { transform: translateY(0); }
-        }
+        @keyframes marioJump { 0% { transform: translateY(0); } 50% { transform: translateY(-50px); } 100% { transform: translateY(0); } }
 
         .global-lyric-wrapper { position: absolute; width: 100%; text-align: center; transition: transform 0.4s ease-out; top: 0; }
         .global-lyric-line { line-height: 40px; height: 40px; font-size: 18px; color: rgba(255, 255, 255, 0.5); text-shadow: 2px 2px 0 #000; transition: all 0.3s; }
@@ -214,6 +201,61 @@
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
+        /* 📱 ========================================= */
+        /* 📱 终极响应式适配：让手机端也完美显示 (新增) */
+        /* 📱 ========================================= */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto; /* 手机端允许页面整体上下滚动 */
+                height: auto;
+            }
+            .container {
+                flex-direction: column; /* 手机上，左侧播放器和右侧歌单改成上下堆叠 */
+                height: auto;
+            }
+
+            /* 调整顶部导航栏 */
+            .top-nav h1 { font-size: 16px; }
+            .random-btn { font-size: 14px; padding: 5px 10px; }
+            .mario-hello-logo { height: 30px; }
+
+            /* 调整左侧播放区域 */
+            .left-player {
+                width: 100%;
+                border-right: none;
+                border-bottom: 6px solid var(--outline-black);
+                padding: 1.5rem 1rem;
+            }
+            .player-station { width: 100%; max-width: 400px; }
+            .record-player-bay { height: 260px; margin-bottom: 1rem; }
+            .turntable-platter { width: 180px; height: 180px; }
+            .center-hole { width: 40px; height: 40px; }
+            .tonearm { width: 90px; height: 90px; top: 15px; right: 15px; }
+
+            /* 调整右侧歌单区域 */
+            .right-playlist {
+                width: 100%;
+                overflow-y: visible; /* 关闭内部滚动，让手指滑屏幕整体滚动 */
+                padding: 1.5rem 1rem 120px 1rem; 
+            }
+            .playlist-header { font-size: 24px; }
+            .mario-mushroom-present { height: 50px; }
+            .song-item { font-size: 16px; padding: 1rem 0.5rem; }
+
+            /* 调整歌词栏尺寸以适应手机 */
+            .global-lyrics-bar { height: 90px; transform: translateY(94px); }
+            .lyrics-mask { height: 90px; }
+            .global-lyric-line { line-height: 30px; height: 30px; font-size: 14px; }
+            .global-lyric-line.active { font-size: 18px; }
+            
+            /* 调整水管马里奥位置 */
+            .mario-pipe-pop { height: 70px; top: -60px; left: 10px; }
+            
+            /* Game over 字体调整 */
+            .game-over-screen { font-size: 12vw; }
+            .game-over-subtext { font-size: 16px; }
+        }
+
     </style>
 </head>
 <body>
@@ -226,7 +268,7 @@
     <div class="top-nav">
         <div class="nav-logo-area">
             <img class="mario-hello-logo" src="./images2/mario-hello.png" alt="Mario Hello">
-            <h1>我的像素音乐盒 v13.2</h1>
+            <h1>我的像素音乐盒</h1>
         </div>
         <button class="random-btn" onclick="playRandom();">
             随机播放 <span style="font-family: 'Press Start 2P', cursive; font-size: 10px;">&#9654;</span>
@@ -319,7 +361,7 @@
             osc.type = 'square'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); 
             osc.frequency.exponentialRampToValueAtTime(freq/2, audioCtx.currentTime + 0.05);
             
-            // 🌟 核心修复：提升 GainNode 到 1.5，按键音量暴增！
+            // 保持强烈的 1.5 音量反馈
             gain.gain.setValueAtTime(1.5, audioCtx.currentTime); 
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
             
@@ -393,7 +435,14 @@
             scrollLrc(0); curLrcIdx = -1;
         }
 
-        function scrollLrc(idx) { const h = 120; const lh = 40; const offset = (h/2) - (lh/2) - (idx * lh); lrcWrapper.style.transform = `translateY(${offset}px)`; }
+        // 🌟 动态检测屏幕宽度，确保歌词在手机上也能完美滚动居中
+        function scrollLrc(idx) { 
+            const isMobile = window.innerWidth <= 768;
+            const h = isMobile ? 90 : 120; // 手机端蒙版高度90，电脑端120
+            const lh = isMobile ? 30 : 40; // 手机端单行高度30，电脑端40
+            const offset = (h/2) - (lh/2) - (idx * lh); 
+            lrcWrapper.style.transform = `translateY(${offset}px)`; 
+        }
         
         function updateUI() {
             const items = document.querySelectorAll('.song-item');
@@ -471,8 +520,13 @@
 
         function format(s) { if (isNaN(s)) return "00:00"; const m = Math.floor(s/60); const sec = Math.floor(s%60); return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
         function seek(e) { const w = progCont.clientWidth; const x = Math.max(0, Math.min(e.offsetX, w)); if (audio.duration) { const time = (x/w) * audio.duration; progBar.style.width = (x/w)*100 + '%'; curTimeEl.innerText = format(time); return time; } return 0; }
-        progCont.onmousedown = (e) => { if(curIdx === -1) return; isDragging = true; seek(e); }; window.onmousemove = (e) => { if (isDragging) { const rect = progCont.getBoundingClientRect(); seek({ offsetX: e.clientX - rect.left }); } }; window.onmouseup = (e) => { if (isDragging) { isDragging = false; const rect = progCont.getBoundingClientRect(); audio.currentTime = seek({ offsetX: e.clientX - rect.left }); } };
+        progCont.onmousedown = (e) => { if(curIdx === -1) return; isDragging = true; seek(e); }; 
+        window.onmousemove = (e) => { if (isDragging) { const rect = progCont.getBoundingClientRect(); seek({ offsetX: e.clientX - rect.left }); } }; 
+        window.onmouseup = (e) => { if (isDragging) { isDragging = false; const rect = progCont.getBoundingClientRect(); audio.currentTime = seek({ offsetX: e.clientX - rect.left }); } };
         
+        // 监听屏幕大小变化，动态刷新歌词位置
+        window.addEventListener('resize', () => { if (curLrcIdx !== -1) scrollLrc(curLrcIdx); });
+
         init();
     </script>
 </body>
