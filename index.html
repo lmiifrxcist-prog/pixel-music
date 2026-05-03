@@ -1,223 +1,788 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的像素音乐盒 - v14.0 自适应版</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=DotGothic16&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=DotGothic16&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --mario-red: #E52521;
-            --mario-red-dark: #A51A17; 
-            --mario-red-light: #FF5A57; 
+            --mario-red: #555555;
+            --mario-red-dark: #333333;
+            --mario-red-light: #777777;
             --pixel-white: #FFFFFF;
-            --pixel-white-dark: #E0E0E0; 
+            --pixel-white-dark: #E0E0E0;
             --outline-black: #000000;
             --famicom-grey: #F8F8F8;
             --progress-filled: #FFFFFF;
             --progress-bg: #FFFFFF44;
+            --luigi-green: #43B047;
+            --luigi-green-dark: #2F7C32;
+            --luigi-green-light: #6BD070;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body.mario-mode {
+            --mario-red: #E52521;
+            --mario-red-dark: #A51A17;
+            --mario-red-light: #FF5A57;
+        }
+
+        body.luigi-mode {
+            --mario-red: var(--luigi-green);
+            --mario-red-dark: var(--luigi-green-dark);
+            --mario-red-light: var(--luigi-green-light);
+        }
+
+        body.peach-mode {
+            --mario-red: #FF87AB;
+            --mario-red-dark: #D65A7E;
+            --mario-red-light: #FFB6C1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
-            font-family: 'VT323', monospace; font-size: 24px;
-            background-color: var(--outline-black); color: var(--outline-black);
-            height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column; 
-            user-select: none; position: relative;
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            background-color: var(--outline-black);
+            color: var(--outline-black);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            position: relative;
         }
 
         /* 全局 CRT 像素网格叠加层 */
         body::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background-image: linear-gradient(rgba(0, 0, 0, 0.05) 2px, transparent 2px), linear-gradient(90deg, rgba(0, 0, 0, 0.05) 2px, transparent 2px);
-            background-size: 4px 4px; pointer-events: none; z-index: 999;
+            background-size: 4px 4px;
+            pointer-events: none;
+            z-index: 999;
         }
 
-        h1, h2, .song-title, .artist-name { font-family: 'DotGothic16', sans-serif; font-weight: normal; }
+        h1,
+        h2,
+        .song-title,
+        .artist-name {
+            font-family: 'DotGothic16', sans-serif;
+            font-weight: normal;
+        }
 
         /* 顶部导航栏 */
         .top-nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px 20px; background-color: var(--famicom-grey);
-            border-bottom: 4px solid var(--outline-black); z-index: 50; position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: var(--famicom-grey);
+            border-bottom: 4px solid var(--outline-black);
+            z-index: 50;
+            position: relative;
         }
-        .nav-logo-area { display: flex; align-items: center; gap: 10px; }
-        .mario-hello-logo { height: 40px; image-rendering: pixelated; }
-        .top-nav h1 { font-size: 20px; margin: 0; }
-        
+
+        .nav-logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .mario-hello-logo {
+            height: 40px;
+            image-rendering: pixelated;
+            cursor: pointer;
+        }
+
+        .mario-hello-logo.jump {
+            animation: logoJump 0.2s ease-out;
+        }
+
+        @keyframes logoJump {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .top-nav h1 {
+            font-size: 20px;
+            margin: 0;
+        }
+
         .random-btn {
-            font-family: 'DotGothic16', sans-serif; font-size: 16px;
-            background-color: var(--pixel-white); border: 4px solid var(--outline-black);
-            box-shadow: 4px 4px 0px var(--outline-black); padding: 5px 15px;
-            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 16px;
+            background-color: var(--pixel-white);
+            border: 4px solid var(--outline-black);
+            box-shadow: 4px 4px 0px var(--outline-black);
+            padding: 5px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             transition: transform 0.1s, box-shadow 0.1s;
         }
-        .random-btn:active, .control-btn:active { transform: translate(2px, 2px) scale(0.95); box-shadow: 0px 0px 0px var(--outline-black); }
 
-        .container { display: flex; height: calc(100vh - 60px); width: 100vw; flex-direction: row; position: relative; }
+        .random-btn:active,
+        .control-btn:active {
+            transform: translate(2px, 2px) scale(0.95);
+            box-shadow: 0px 0px 0px var(--outline-black);
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+            width: 100vw;
+            flex-direction: row;
+            position: relative;
+        }
 
         /* 左侧：播放器中枢 */
         .left-player {
-            flex: 4; background-color: var(--mario-red); border-right: 6px solid var(--outline-black);
+            flex: 4;
+            background-color: var(--mario-red);
+            border-right: 6px solid var(--outline-black);
             box-shadow: inset 6px 6px 0px var(--mario-red-light), inset -6px -6px 0px var(--mario-red-dark);
-            display: flex; flex-direction: column; justify-content: flex-start; align-items: center; 
-            padding: 2.5rem 2rem; position: relative; z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 2.5rem 2rem;
+            position: relative;
+            z-index: 10;
         }
 
         @keyframes starPowerFlashing {
-            0% { background-color: #E52521; }
-            20% { background-color: #FFD700; }
-            40% { background-color: #00FF00; }
-            60% { background-color: #00FFFF; }
-            80% { background-color: #FF00FF; }
-            100% { background-color: #E52521; }
-        }
-        .star-power-active { animation: starPowerFlashing 0.2s infinite; }
+            0% {
+                background-color: #E52521;
+            }
 
-        .player-station { display: flex; flex-direction: column; width: 450px; position: relative; z-index: 20; }
+            20% {
+                background-color: #FFD700;
+            }
+
+            40% {
+                background-color: #00FF00;
+            }
+
+            60% {
+                background-color: #00FFFF;
+            }
+
+            80% {
+                background-color: #FF00FF;
+            }
+
+            100% {
+                background-color: #E52521;
+            }
+        }
+
+        .star-power-active {
+            animation: starPowerFlashing 0.2s infinite;
+        }
+
+        .player-station {
+            display: flex;
+            flex-direction: column;
+            width: 450px;
+            position: relative;
+            z-index: 20;
+        }
 
         .record-player-bay {
-            width: 100%; height: 300px; background-color: #111; border: 6px solid var(--outline-black); 
-            box-shadow: 8px 8px 0px var(--outline-black), inset 10px 10px 20px rgba(0,0,0,0.8);
-            position: relative; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center;
+            width: 100%;
+            height: 300px;
+            background-color: #111;
+            border: 6px solid var(--outline-black);
+            box-shadow: 8px 8px 0px var(--outline-black), inset 10px 10px 20px rgba(0, 0, 0, 0.8);
+            position: relative;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         .record-player-bay::before {
-            content: ''; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px;
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
             background-image: repeating-linear-gradient(0deg, #333, #333 2px, transparent 2px, transparent 6px), repeating-linear-gradient(90deg, #333, #333 2px, transparent 2px, transparent 6px);
-            -webkit-mask-image: radial-gradient(circle, transparent 115px, black 116px); mask-image: radial-gradient(circle, transparent 115px, black 116px);
-            image-rendering: pixelated; pointer-events: none; z-index: 0;
+            -webkit-mask-image: radial-gradient(circle, transparent 115px, black 116px);
+            mask-image: radial-gradient(circle, transparent 115px, black 116px);
+            image-rendering: pixelated;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .turntable-platter {
-            width: 250px; height: 250px; border-radius: 50%; border: 4px solid var(--famicom-grey); 
-            position: absolute; z-index: 1; overflow: hidden; background-color: #2a2a2a; box-shadow: inset 4px 4px 0px #333;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: 4px solid var(--famicom-grey);
+            position: absolute;
+            z-index: 1;
+            overflow: hidden;
+            background-color: #2a2a2a;
+            box-shadow: inset 4px 4px 0px #333;
+            cursor: pointer;
         }
-        
+
         .press-start-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: var(--mario-red); font-family: 'Press Start 2P', cursive; font-size: 18px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--mario-red);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
             text-shadow: 2px 2px 0 var(--outline-black), -2px -2px 0 var(--outline-black), 2px -2px 0 var(--outline-black), -2px 2px 0 var(--outline-black);
-            animation: pressStartBlink 1s infinite; z-index: 10; pointer-events: none; width: 100%; text-align: center;
+            animation: pressStartBlink 1s infinite;
+            z-index: 10;
+            pointer-events: none;
+            width: 100%;
+            text-align: center;
             line-height: 1.5;
         }
-        @keyframes pressStartBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        .turntable-platter img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; opacity: 0; transition: opacity 0.5s; }
-        .center-hole { width: 60px; height: 60px; background-color: #111; border-radius: 50%; position: absolute; z-index: 2; border: 2px solid #333; }
+        @keyframes pressStartBlink {
 
-        @keyframes rotate-cover { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .turntable-platter.playing { animation: rotate-cover 10s linear infinite; }
+            0%,
+            100% {
+                opacity: 1;
+            }
 
-        .tonearm { width: 120px; height: 120px; border: 4px solid var(--famicom-grey); border-bottom: none; border-right: none; position: absolute; top: 20px; right: 20px; z-index: 15; transition: transform 0.5s; transform-origin: top right; }
-        .tonearm.playing { transform: rotate(15deg); }
+            50% {
+                opacity: 0;
+            }
+        }
 
-        .note-bay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 15; }
+        .turntable-platter img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .center-hole {
+            width: 60px;
+            height: 60px;
+            background-color: #111;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 2;
+            border: 2px solid #333;
+        }
+
+        @keyframes rotate-cover {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .turntable-platter.playing {
+            animation: rotate-cover 10s linear infinite;
+        }
+
+        .tonearm {
+            width: 120px;
+            height: 120px;
+            border: 4px solid var(--famicom-grey);
+            border-bottom: none;
+            border-right: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 15;
+            transition: transform 0.5s;
+            transform-origin: top right;
+        }
+
+        .tonearm.playing {
+            transform: rotate(15deg);
+        }
+
+        .note-bay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 15;
+        }
+
         .floating-note {
-            position: absolute; color: var(--pixel-white); font-family: 'Press Start 2P', cursive; font-size: 16px; 
-            animation: floatUp 2s ease-in forwards; text-shadow: 2px 2px 0 var(--outline-black);
+            position: absolute;
+            color: var(--pixel-white);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            animation: floatUp 2s ease-in forwards;
+            text-shadow: 2px 2px 0 var(--outline-black);
+            pointer-events: auto;
+            cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZ0lEQVQ4y2NgGNEA/////2T6n4YgN42xGkEtwKQpZED1gJiMIA24DKCqQVhGoLqBpA+wGUASxOcdbAboTgbpA+hOBukDuE4G6QP4TgbpAwROBjkdBCcT9AAhOAluAhE4CW4CETgJAgAw+E/9yv+kPAAAAABJRU5ErkJggg==') 5 0, pointer;
+            z-index: 100;
         }
+
+        .floating-note:active {
+            transform: scale(0.8);
+        }
+
         @keyframes floatUp {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(calc(20px - 40px * var(--dir)), -150px) scale(1.5) rotate(calc(45deg * var(--dir))); opacity: 0; }
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(calc(20px - 40px * var(--dir)), -150px) scale(1.5) rotate(calc(45deg * var(--dir)));
+                opacity: 0;
+            }
         }
 
-        .widget-top-info { background-color: #FFFFFF22; border: 4px solid var(--outline-black); box-shadow: 6px 6px 0px var(--outline-black); padding: 15px; color: var(--pixel-white); margin-bottom: 2px; position: relative; }
-        .info-song-title { font-size: 18px; margin-bottom: 4px; }
-        .info-artist { font-size: 14px; margin-bottom: 10px; opacity: 0.8; }
-        .progress-container { width: 100%; height: 14px; padding: 4px 0; cursor: pointer; position: relative; z-index: 5; }
-        .progress-track { width: 100%; height: 6px; background-color: var(--progress-bg); border: 2px solid var(--outline-black); }
-        .progress-bar { height: 100%; width: 0%; background-color: var(--progress-filled); position: relative; }
-        .progress-bar::after { content: ''; position: absolute; right: -5px; top: -3px; width: 10px; height: 12px; background-color: var(--pixel-white); border: 2px solid var(--outline-black); box-shadow: 3px 3px 0 var(--outline-black), inset 2px 2px 0 var(--pixel-white-dark); }
-        .time-display { font-size: 12px; color: #FFFFFF88; display: flex; justify-content: space-between; margin-top: 4px; }
+        .widget-top-info {
+            background-color: #FFFFFF22;
+            border: 4px solid var(--outline-black);
+            box-shadow: 6px 6px 0px var(--outline-black);
+            padding: 15px;
+            color: var(--pixel-white);
+            margin-bottom: 2px;
+            position: relative;
+        }
 
-        .widget-bottom-controls { background-color: var(--pixel-white); border: 4px solid var(--outline-black); box-shadow: 6px 6px 0px var(--outline-black), inset 3px 3px 0 var(--pixel-white-dark); padding: 10px; display: flex; justify-content: flex-end; align-items: center; gap: 20px; z-index: 20; }
-        .control-btn { background: none; border: none; cursor: pointer; font-size: 22px; transition: transform 0.1s; }
+        .info-song-title {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .info-artist {
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 14px;
+            padding: 4px 0;
+            cursor: pointer;
+            position: relative;
+            z-index: 5;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background-color: var(--progress-bg);
+            border: 2px solid var(--outline-black);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--progress-filled);
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -3px;
+            width: 10px;
+            height: 12px;
+            background-color: var(--pixel-white);
+            border: 2px solid var(--outline-black);
+            box-shadow: 3px 3px 0 var(--outline-black), inset 2px 2px 0 var(--pixel-white-dark);
+        }
+
+        .time-display {
+            font-size: 12px;
+            color: #FFFFFF88;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+
+        .widget-bottom-controls {
+            background-color: var(--pixel-white);
+            border: 4px solid var(--outline-black);
+            box-shadow: 6px 6px 0px var(--outline-black), inset 3px 3px 0 var(--pixel-white-dark);
+            padding: 10px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 20px;
+            z-index: 20;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 22px;
+            transition: transform 0.1s;
+        }
 
         /* 右侧播放列表 */
-        .right-playlist { 
-            flex: 6; background-color: var(--pixel-white); overflow-y: auto; padding: 2.5rem 2rem; 
-            scrollbar-width: thin; scrollbar-color: var(--mario-red) var(--famicom-grey); padding-bottom: 150px; position: relative;
+        .right-playlist {
+            flex: 6;
+            background-color: var(--pixel-white);
+            overflow-y: auto;
+            padding: 2.5rem 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--mario-red) var(--famicom-grey);
+            padding-bottom: 150px;
+            position: relative;
         }
-        .right-playlist::-webkit-scrollbar { width: 12px; }
-        .right-playlist::-webkit-scrollbar-track { background: var(--famicom-grey); border-left: 4px solid var(--outline-black); }
-        .right-playlist::-webkit-scrollbar-thumb { background: var(--mario-red); border: 3px solid var(--outline-black); }
 
-        .playlist-header-wrapper { display: flex; align-items: flex-end; gap: 20px; position: relative; border-bottom: 6px solid var(--outline-black); margin-bottom: 2rem; padding-bottom: 1rem; }
-        .playlist-header { font-size: 28px; color: var(--mario-red); margin: 0; }
-        .mario-mushroom-present { position: absolute; right: 10px; bottom: 0px; height: 70px; image-rendering: pixelated; }
+        .right-playlist::-webkit-scrollbar {
+            width: 12px;
+        }
 
-        .song-item { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1rem; border-bottom: 4px dashed var(--outline-black); cursor: pointer; transition: background 0.2s; position: relative; }
-        .song-item:nth-child(even) { background-color: var(--pixel-white-dark); }
-        .song-item:hover { background-color: #FFFFD5; color: var(--outline-black); }
-        .song-item.active { background-color: var(--mario-red); color: var(--pixel-white); border-bottom-style: solid; }
-        .song-item .hover-pointer { opacity: 0; margin-right: 8px; font-size: 16px; transition: opacity 0.2s; transform: translateX(-5px); }
-        .song-item:hover .hover-pointer { opacity: 1; transform: translateX(0); }
+        .right-playlist::-webkit-scrollbar-track {
+            background: var(--famicom-grey);
+            border-left: 4px solid var(--outline-black);
+        }
+
+        .right-playlist::-webkit-scrollbar-thumb {
+            background: var(--mario-red);
+            border: 3px solid var(--outline-black);
+        }
+
+        .playlist-header-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            position: relative;
+            border-bottom: 6px solid var(--outline-black);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        .playlist-header {
+            font-size: 28px;
+            color: var(--mario-red);
+            margin: 0;
+        }
+
+        .mario-mushroom-present {
+            position: absolute;
+            right: 10px;
+            bottom: 0px;
+            height: 70px;
+            image-rendering: pixelated;
+        }
+
+        .song-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1rem;
+            border-bottom: 4px dashed var(--outline-black);
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .song-item:nth-child(even) {
+            background-color: var(--pixel-white-dark);
+        }
+
+        .song-item:hover {
+            background-color: #FFFFD5;
+            color: var(--outline-black);
+        }
+
+        .song-item.active {
+            background-color: var(--mario-red);
+            color: var(--pixel-white);
+            border-bottom-style: solid;
+        }
+
+        .song-item .hover-pointer {
+            opacity: 0;
+            margin-right: 8px;
+            font-size: 16px;
+            transition: opacity 0.2s;
+            transform: translateX(-5px);
+        }
+
+        .song-item:hover .hover-pointer {
+            opacity: 1;
+            transform: translateX(0);
+        }
 
         /* 联动歌词栏 */
         .global-lyrics-bar {
-            height: 120px; width: 100vw; position: fixed; bottom: 0; left: 0;
-            background-color: rgba(0, 0, 0, 0.85); border-top: 4px solid var(--pixel-white);
-            z-index: 100; pointer-events: none; 
-            transform: translateY(124px); opacity: 0;
+            height: 120px;
+            width: 100vw;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            border-top: 4px solid var(--pixel-white);
+            z-index: 100;
+            pointer-events: none;
+            transform: translateY(124px);
+            opacity: 0;
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
-            overflow: visible; 
+            overflow: visible;
         }
-        .global-lyrics-bar.show { transform: translateY(0); opacity: 1; }
 
-        .lyrics-mask { width: 100%; height: 120px; overflow: hidden; position: relative; }
+        .global-lyrics-bar.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .pip-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent;
+            border: 2px solid var(--pixel-white);
+            color: var(--pixel-white);
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 14px;
+            padding: 5px 10px;
+            cursor: pointer;
+            z-index: 120;
+            opacity: 0.6;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+
+        .pip-btn:hover {
+            opacity: 1;
+            background-color: var(--pixel-white);
+            color: var(--outline-black);
+        }
+
+        .lyrics-mask {
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            position: relative;
+        }
 
         /* 水管马里奥 */
         .mario-pipe-pop {
-            position: absolute; top: -85px; left: 20px; height: 95px;
-            image-rendering: pixelated; z-index: 110; 
-            transform: translateY(85px); opacity: 0; 
-            transition: transform 0.5s 0.3s ease-out, opacity 0.3s 0.3s; 
+            position: absolute;
+            top: -85px;
+            left: 20px;
+            height: 95px;
+            image-rendering: pixelated;
+            z-index: 110;
+            transform: translateY(85px);
+            opacity: 0;
+            transition: transform 0.5s 0.3s ease-out, opacity 0.3s 0.3s;
         }
-        .global-lyrics-bar.show .mario-pipe-pop { transform: translateY(0); opacity: 1; }
-        .mario-pipe-pop.jump { animation: marioJump 0.4s ease-out; }
-        @keyframes marioJump { 0% { transform: translateY(0); } 50% { transform: translateY(-50px); } 100% { transform: translateY(0); } }
 
-        .global-lyric-wrapper { position: absolute; width: 100%; text-align: center; transition: transform 0.4s ease-out; top: 0; }
-        .global-lyric-line { line-height: 40px; height: 40px; font-size: 18px; color: rgba(255, 255, 255, 0.5); text-shadow: 2px 2px 0 #000; transition: all 0.3s; }
-        .global-lyric-line.active { color: #FFDE00; font-size: 24px; font-weight: bold; text-shadow: 3px 3px 0 #000, -3px -3px 0 #000; }
+        .global-lyrics-bar.show .mario-pipe-pop {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .mario-pipe-pop.jump {
+            animation: marioJump 0.4s ease-out;
+        }
+
+        @keyframes marioJump {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-50px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .mario-bubble {
+            position: absolute;
+            top: -120px;
+            left: 30px;
+            background: #FFF;
+            color: #000;
+            padding: 8px 12px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            white-space: nowrap;
+            z-index: 120;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .mario-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 10px;
+            border-width: 10px 10px 0 0;
+            border-style: solid;
+            border-color: #000 transparent transparent transparent;
+        }
+
+        .mario-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 11px;
+            border-width: 8px 8px 0 0;
+            border-style: solid;
+            border-color: #FFF transparent transparent transparent;
+            z-index: 1;
+        }
+
+        .mario-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .global-lyric-wrapper {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            transition: transform 0.4s ease-out;
+            top: 0;
+        }
+
+        .global-lyric-line {
+            line-height: 40px;
+            height: 40px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.5);
+            text-shadow: 2px 2px 0 #000;
+            transition: all 0.3s;
+        }
+
+        .global-lyric-line.active {
+            color: #FFDE00;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 3px 3px 0 #000, -3px -3px 0 #000;
+        }
 
         /* GAME OVER 画面 */
         .game-over-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85); color: var(--mario-red); 
-            font-family: 'Press Start 2P', cursive; font-size: 8vw;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; opacity: 0; pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            color: var(--mario-red);
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
             transition: opacity 0.3s;
             text-shadow: 4px 4px 0 var(--pixel-white), 8px 8px 0 var(--outline-black);
             cursor: pointer;
         }
-        .game-over-screen.show { opacity: 1; pointer-events: auto; }
-        .game-over-subtext {
-            font-family: 'DotGothic16', sans-serif; font-size: 24px; color: var(--pixel-white);
-            margin-top: 20px; text-shadow: none; animation: blink 1s infinite;
+
+        .game-over-screen.show {
+            opacity: 1;
+            pointer-events: auto;
         }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .game-over-subtext {
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 24px;
+            color: var(--pixel-white);
+            margin-top: 20px;
+            text-shadow: none;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
 
         /* 📱 ========================================= */
         /* 📱 终极响应式适配：让手机端也完美显示 (新增) */
         /* 📱 ========================================= */
         @media (max-width: 768px) {
             body {
-                overflow-y: auto; /* 手机端允许页面整体上下滚动 */
+                overflow-y: auto;
+                /* 手机端允许页面整体上下滚动 */
                 height: auto;
             }
+
             .container {
-                flex-direction: column; /* 手机上，左侧播放器和右侧歌单改成上下堆叠 */
+                flex-direction: column;
+                /* 手机上，左侧播放器和右侧歌单改成上下堆叠 */
                 height: auto;
             }
 
             /* 调整顶部导航栏 */
-            .top-nav h1 { font-size: 16px; }
-            .random-btn { font-size: 14px; padding: 5px 10px; }
-            .mario-hello-logo { height: 30px; }
+            .top-nav h1 {
+                font-size: 16px;
+            }
+
+            .random-btn {
+                font-size: 14px;
+                padding: 5px 10px;
+            }
+
+            .mario-hello-logo {
+                height: 30px;
+            }
 
             /* 调整左侧播放区域 */
             .left-player {
@@ -226,39 +791,757 @@
                 border-bottom: 6px solid var(--outline-black);
                 padding: 1.5rem 1rem;
             }
-            .player-station { width: 100%; max-width: 400px; }
-            .record-player-bay { height: 260px; margin-bottom: 1rem; }
-            .turntable-platter { width: 180px; height: 180px; }
-            .center-hole { width: 40px; height: 40px; }
-            .tonearm { width: 90px; height: 90px; top: 15px; right: 15px; }
+
+            .player-station {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .record-player-bay {
+                height: 260px;
+                margin-bottom: 1rem;
+            }
+
+            .turntable-platter {
+                width: 180px;
+                height: 180px;
+            }
+
+            .center-hole {
+                width: 40px;
+                height: 40px;
+            }
+
+            .tonearm {
+                width: 90px;
+                height: 90px;
+                top: 15px;
+                right: 15px;
+            }
 
             /* 调整右侧歌单区域 */
             .right-playlist {
                 width: 100%;
-                overflow-y: visible; /* 关闭内部滚动，让手指滑屏幕整体滚动 */
-                padding: 1.5rem 1rem 120px 1rem; 
+                overflow-y: visible;
+                /* 关闭内部滚动，让手指滑屏幕整体滚动 */
+                padding: 1.5rem 1rem 120px 1rem;
             }
-            .playlist-header { font-size: 24px; }
-            .mario-mushroom-present { height: 50px; }
-            .song-item { font-size: 16px; padding: 1rem 0.5rem; }
+
+            .playlist-header {
+                font-size: 24px;
+            }
+
+            .mario-mushroom-present {
+                height: 50px;
+            }
+
+            .song-item {
+                font-size: 16px;
+                padding: 1rem 0.5rem;
+            }
 
             /* 调整歌词栏尺寸以适应手机 */
-            .global-lyrics-bar { height: 90px; transform: translateY(94px); }
-            .lyrics-mask { height: 90px; }
-            .global-lyric-line { line-height: 30px; height: 30px; font-size: 14px; }
-            .global-lyric-line.active { font-size: 18px; }
-            
+            .global-lyrics-bar {
+                height: 90px;
+                transform: translateY(94px);
+            }
+
+            .lyrics-mask {
+                height: 90px;
+            }
+
+            .global-lyric-line {
+                line-height: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+
+            .global-lyric-line.active {
+                font-size: 18px;
+            }
+
             /* 调整水管马里奥位置 */
-            .mario-pipe-pop { height: 70px; top: -60px; left: 10px; }
-            
+            .mario-pipe-pop {
+                height: 70px;
+                top: -60px;
+                left: 10px;
+            }
+
             /* Game over 字体调整 */
-            .game-over-screen { font-size: 12vw; }
-            .game-over-subtext { font-size: 16px; }
+            .game-over-screen {
+                font-size: 12vw;
+            }
+
+            .game-over-subtext {
+                font-size: 16px;
+            }
         }
 
+        .trophy-container {
+            position: fixed;
+            bottom: 130px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            flex-direction: row-reverse;
+            flex-wrap: wrap;
+            pointer-events: none;
+            width: 300px;
+        }
+
+        .trophy-item {
+            font-size: 30px;
+            text-shadow: 2px 2px 0 var(--outline-black);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* --- 初始界面大改版 9大彩蛋 --- */
+        /* 彩蛋1: 老电视开机 */
+        .crt-boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .crt-line {
+            width: 0;
+            height: 2px;
+            background: #FFF;
+            box-shadow: 0 0 10px #FFF;
+            animation: crtTurnOn 1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes crtTurnOn {
+            0% {
+                width: 0;
+                height: 2px;
+            }
+
+            40% {
+                width: 100vw;
+                height: 2px;
+            }
+
+            60% {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            100% {
+                width: 100vw;
+                height: 100vh;
+                opacity: 0;
+                display: none;
+            }
+        }
+
+        /* 彩蛋2: 背景像素云层 */
+        .left-player {
+            overflow: hidden;
+        }
+
+        .parallax-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background-image: repeating-linear-gradient(90deg, transparent 0, transparent 40px, rgba(255, 255, 255, 0.1) 40px, rgba(255, 255, 255, 0.1) 80px);
+            z-index: 1;
+            animation: scrollBg 20s linear infinite;
+            pointer-events: none;
+        }
+
+        .left-player.playing .parallax-bg {
+            animation-play-state: paused;
+            opacity: 0.2;
+        }
+
+        @keyframes scrollBg {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* 彩蛋3: 沉睡屏保 */
+        .screensaver {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s;
+            color: var(--pixel-white);
+        }
+
+        .screensaver.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sleeping-mario {
+            font-size: 60px;
+            animation: floatSleep 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .sleeping-mario::after {
+            content: 'Zzz...';
+            position: absolute;
+            top: -30px;
+            right: -50px;
+            font-size: 20px;
+            animation: zzz 2s infinite;
+        }
+
+        @keyframes floatSleep {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes zzz {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0);
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(20px, -20px);
+            }
+        }
+
+        /* 彩蛋10: 手柄弹窗 */
+        .dpad-toggle {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 30;
+            font-size: 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background: #222;
+            border: 2px solid #555;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .left-player.playing .dpad-toggle {
+            animation: dpadPulse 2s infinite;
+        }
+
+        @keyframes dpadPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px var(--mario-red-light);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--mario-red), 0 0 30px var(--mario-red);
+            }
+        }
+
+        .dpad-toggle:hover {
+            transform: scale(1.1);
+            border-color: var(--pixel-white);
+        }
+
+        .dpad-toggle:active {
+            transform: scale(0.9);
+        }
+
+        .dpad-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dpad-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #FFF;
+            cursor: pointer;
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+
+        .dpad-modal-close:hover {
+            color: var(--mario-red);
+        }
+
+        .virtual-dpad-area {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-top: 40px;
+        }
+
+        .dpad-cross {
+            width: 90px;
+            height: 90px;
+            position: relative;
+        }
+
+        .dpad-btn {
+            position: absolute;
+            background: #333;
+            cursor: pointer;
+        }
+
+        .dpad-btn:active {
+            background: #555;
+        }
+
+        .dpad-up {
+            top: 0;
+            left: 30px;
+            width: 30px;
+            height: 35px;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .dpad-up::after {
+            content: '▲';
+            color: #666;
+            font-size: 12px;
+            position: absolute;
+            top: 2px;
+            left: 8px;
+        }
+
+        .dpad-down {
+            bottom: 0;
+            left: 30px;
+            width: 30px;
+            height: 35px;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .dpad-down::after {
+            content: '▼';
+            color: #666;
+            font-size: 12px;
+            position: absolute;
+            bottom: 2px;
+            left: 8px;
+        }
+
+        .dpad-left {
+            top: 30px;
+            left: 0;
+            width: 35px;
+            height: 30px;
+            border-radius: 5px 0 0 5px;
+        }
+
+        .dpad-left::after {
+            content: '◄';
+            color: #666;
+            font-size: 12px;
+            position: absolute;
+            top: 6px;
+            left: 2px;
+        }
+
+        .dpad-right {
+            top: 30px;
+            right: 0;
+            width: 35px;
+            height: 30px;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .dpad-right::after {
+            content: '►';
+            color: #666;
+            font-size: 12px;
+            position: absolute;
+            top: 6px;
+            right: 2px;
+        }
+
+        .dpad-center {
+            top: 30px;
+            left: 30px;
+            width: 30px;
+            height: 30px;
+            background: #333;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .dpad-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-a,
+        .btn-b {
+            width: 40px;
+            height: 40px;
+            background: var(--mario-red);
+            border-radius: 50%;
+            color: #FFF;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 2px 0 #000;
+            font-family: sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-a:active,
+        .btn-b:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 #000;
+        }
+
+        .dpad-hint {
+            font-size: 14px;
+            color: #FFF;
+            white-space: nowrap;
+            font-family: 'Press Start 2P';
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0 #000;
+            text-align: center;
+        }
+
+        /* 状态机视图 */
+        .arcade-view {
+            width: 250px;
+            height: 250px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            background-color: #2a2a2a;
+            border-radius: 50%;
+            border: 4px solid var(--famicom-grey);
+            overflow: hidden;
+            box-shadow: inset 4px 4px 0px #333;
+        }
+
+        .avatar-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .avatar-box {
+            width: 50px;
+            height: 50px;
+            font-size: 30px;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid #555;
+            transition: transform 0.2s;
+        }
+
+        .avatar-box:hover {
+            transform: scale(1.2);
+            border-color: var(--pixel-white);
+        }
+
+        .blink {
+            animation: blinkText 1s infinite;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @keyframes blinkText {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .coin-slot-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .coin-slot {
+            width: 10px;
+            height: 50px;
+            background: #000;
+            border: 3px solid #666;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: inset 2px 2px 5px #000;
+        }
+
+        .coin-slot:hover {
+            border-color: #FFDE00;
+        }
+
+        .coin-arrow {
+            font-size: 24px;
+            animation: bounceLeft 0.5s infinite alternate;
+        }
+
+        @keyframes bounceLeft {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-10px);
+            }
+        }
+
+        .cassette-deck {
+            width: 150px;
+            height: 80px;
+            background: #111;
+            border: 2px solid #444;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .cassette-tape {
+            width: 120px;
+            height: 60px;
+            background: #FFF;
+            position: absolute;
+            bottom: -80px;
+            left: 15px;
+            border: 2px solid #000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            transition: bottom 0.5s;
+        }
+
+        .cassette-tape::before,
+        .cassette-tape::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: #111;
+            border-radius: 50%;
+        }
+
+        .cassette-deck.loading .cassette-tape {
+            bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .dpad-toggle {
+                position: static;
+                display: block;
+                width: fit-content;
+                margin: 20px auto;
+            }
+
+            .dpad-modal {
+                position: fixed;
+            }
+
+            .virtual-dpad-area {
+                transform: scale(0.8);
+            }
+        }
+
+        /* 节奏游戏面板 — 挂载于主容器之上，空出底部歌词栏 */
+        .rhythm-game-overlay {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 120px);
+            background: rgba(0, 0, 0, 0.93);
+            z-index: 90;
+            border-bottom: 3px solid var(--mario-red);
+        }
+
+        .rhythm-game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #111;
+        }
+
+        .rhythm-score {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            color: #FFF;
+            text-shadow: 2px 2px 0 var(--mario-red);
+        }
+
+        .rhythm-quit {
+            color: #FFF;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 20px;
+            transition: color 0.2s;
+            background: #333;
+            border: 2px solid #666;
+            border-radius: 4px;
+            padding: 2px 8px;
+            line-height: 1;
+        }
+
+        .rhythm-quit:hover {
+            color: var(--mario-red);
+            border-color: var(--mario-red);
+        }
+
+        .rhythm-lanes {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            border-top: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+            background: #111;
+        }
+
+        .rhythm-lane {
+            flex: 1;
+            border-right: 1px dashed #2a2a2a;
+            position: relative;
+        }
+
+        .rhythm-lane:last-child {
+            border-right: none;
+        }
+
+        .rhythm-tile {
+            position: absolute;
+            width: calc(100% - 8px);
+            height: 80px;
+            background: var(--mario-red);
+            border: 3px solid var(--pixel-white);
+            left: 4px;
+            top: -80px;
+            cursor: pointer;
+            box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.35);
+            border-radius: 3px;
+            transition: transform 0.08s;
+        }
+
+        .rhythm-tile:active,
+        .rhythm-tile.hit {
+            transform: scaleX(0.9) scaleY(0.8);
+            opacity: 0;
+        }
+
+        .rhythm-hit-zone {
+            position: absolute;
+            bottom: 8px;
+            left: 4px;
+            width: calc(100% - 8px);
+            height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        @media (max-width: 768px) {
+            .rhythm-lanes {
+                height: 150px;
+            }
+
+            .rhythm-tile {
+                height: 50px;
+                top: -50px;
+            }
+
+            .rhythm-hit-zone {
+                height: 40px;
+            }
+
+            .rhythm-score {
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
+
 <body>
+    <div class="crt-boot-screen" id="crt-boot">
+        <div class="crt-line"></div>
+    </div>
+    <div class="screensaver" id="screensaver">
+        <div class="sleeping-mario">😴</div>
+        <div style="margin-top:20px; font-family:'Press Start 2P';">WAKE ME UP!</div>
+    </div>
 
     <div class="game-over-screen" id="game-over" onclick="skipGameOver()">
         GAME OVER
@@ -276,30 +1559,104 @@
     </div>
 
     <div class="container">
+        <!-- 节奏游戏面板 — 覆盖整个主内容区，不遮挡底部歌词 -->
+        <div class="rhythm-game-overlay" id="rhythm-game">
+            <div class="rhythm-game-header">
+                <div class="rhythm-score" id="rhythm-score">COMBO: 0</div>
+                <div class="rhythm-quit" onclick="stopRhythmGame()">✕ 退出</div>
+            </div>
+            <div class="rhythm-lanes" id="rhythm-lanes">
+                <div class="rhythm-lane">
+                    <div class="rhythm-hit-zone"></div>
+                </div>
+                <div class="rhythm-lane">
+                    <div class="rhythm-hit-zone"></div>
+                </div>
+                <div class="rhythm-lane">
+                    <div class="rhythm-hit-zone"></div>
+                </div>
+                <div class="rhythm-lane">
+                    <div class="rhythm-hit-zone"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="left-player" id="left-player-body">
+            <div class="parallax-bg"></div>
+
+
+
+            <div class="dpad-toggle" id="dpad-toggle" onclick="toggleDpadModal(true)">🎮</div>
+
+            <div class="dpad-modal" id="dpad-modal">
+                <div class="dpad-modal-close" onclick="toggleDpadModal(false)">X</div>
+                <div class="dpad-hint">▲ ▲ ▼ ▼ ◄ ◄ ► ► B A B A</div>
+                <div class="virtual-dpad-area" id="dpad-area">
+                    <div class="dpad-cross">
+                        <div class="dpad-btn dpad-up" onclick="inputDpad('ArrowUp')"></div>
+                        <div class="dpad-btn dpad-down" onclick="inputDpad('ArrowDown')"></div>
+                        <div class="dpad-btn dpad-left" onclick="inputDpad('ArrowLeft')"></div>
+                        <div class="dpad-btn dpad-right" onclick="inputDpad('ArrowRight')"></div>
+                        <div class="dpad-center"></div>
+                    </div>
+                    <div class="dpad-buttons">
+                        <div class="btn-b" onclick="inputDpad('b')">B</div>
+                        <div class="btn-a" onclick="inputDpad('a')">A</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="player-station">
                 <div class="record-player-bay" id="record-player-bay">
                     <div class="note-bay" id="note-bay"></div>
-                    <div class="turntable-platter" id="turntable">
-                        <div class="press-start-text" id="press-start-text">PRESS START<br><br><span style="font-size: 12px; color: var(--pixel-white)">TO PLAY MUSIC</span></div>
+
+                    <div class="arcade-view" id="view-select">
+                        <div class="blink" style="margin-bottom: 20px; color: var(--pixel-white);">CHOOSE PLAYER</div>
+                        <div class="avatar-row">
+                            <div class="avatar-box" onclick="selectAvatar('mario')">🍄</div>
+                            <div class="avatar-box" onclick="selectAvatar('luigi')">🐢</div>
+                        </div>
+                    </div>
+
+                    <div class="arcade-view" id="view-coin" style="display:none;">
+                        <div class="blink" style="color: var(--pixel-white); margin-bottom:20px;">INSERT COIN</div>
+                        <div class="coin-slot-container">
+                            <div class="coin-arrow">➡️</div>
+                            <div class="coin-slot" onclick="insertCoin()"></div>
+                        </div>
+                    </div>
+
+                    <div class="arcade-view" id="view-cassette" style="display:none;" onclick="pressStart()">
+                        <div class="cassette-deck" id="deck">
+                            <div class="cassette-tape"></div>
+                        </div>
+                        <div class="press-start-text blink">PRESS START</div>
+                    </div>
+
+                    <div class="turntable-platter" id="turntable" style="display:none;">
                         <img src="" alt="" id="current-cover">
                         <div class="center-hole"></div>
                     </div>
-                    <div class="tonearm" id="tonearm"><div class="cartridge"></div></div>
+                    <div class="tonearm" id="tonearm">
+                        <div class="cartridge"></div>
+                    </div>
                 </div>
 
                 <div class="widget-top-info">
                     <div class="info-song-title" id="current-title">请选择曲目...</div>
                     <div class="info-artist" id="current-artist">-</div>
                     <div class="progress-container" id="prog-cont">
-                        <div class="progress-track"><div class="progress-bar" id="prog-bar"></div></div>
+                        <div class="progress-track">
+                            <div class="progress-bar" id="prog-bar"></div>
+                        </div>
                     </div>
                     <div class="time-display"><span id="cur-time">00:00</span><span id="total-dur">00:00</span></div>
                 </div>
-                
+
                 <div class="widget-bottom-controls">
                     <button class="control-btn" onclick="playBeep(440); prevSong();">&#9198;</button>
-                    <button class="control-btn" onclick="playBeep(1100); togglePlay();" id="master-play-btn" style="color:var(--mario-red)">&#9199;</button>
+                    <button class="control-btn" onclick="playBeep(1100); togglePlay();" id="master-play-btn"
+                        style="color:var(--mario-red)">&#9199;</button>
                     <button class="control-btn" onclick="playBeep(440); nextSong();">&#9197;</button>
                 </div>
             </div>
@@ -317,24 +1674,28 @@
 
     <div class="global-lyrics-bar" id="lrc-container">
         <img class="mario-pipe-pop" id="mario-pop" src="./images2/mario-pipe.png" alt="Mario Pipe">
+        <div class="mario-bubble" id="mario-bubble">▲ ▼ ◄ ► A B</div>
         <div class="lyrics-mask">
             <div class="global-lyric-wrapper" id="lrc-wrapper"></div>
         </div>
+        <button class="pip-btn" onclick="togglePip()" title="桌面歌词 (画中画)">桌面歌词</button>
     </div>
+
+    <div class="trophy-container" id="trophy-cont"></div>
 
     <script>
         const playlist = [
-          { id: 1, title: "素颜", artist: "许嵩_何曼婷", src: "./audio/suyan.mp3", cover: "./images/suyan.webp", lrcPath: "./lyrics/suyan.lrc", duration: "03:58" },
-          { id: 2, title: "我用什么把你留住", artist: "福禄寿FloruitShow", src: "./audio/woyong.mp3", cover: "./images/woyong.webp", lrcPath: "./lyrics/woyong.lrc", duration: "05:30" },
-          { id: 3, title: "辜负", artist: "林小珂", src: "./audio/gufu.mp3", cover: "./images/gufu.webp", lrcPath: "./lyrics/gufu.lrc", duration: "03:23" },
-          { id: 4, title: "执迷不悟", artist: "小乐哥", src: "./audio/zhimi.mp3", cover: "./images/zhimi.webp", lrcPath: "./lyrics/zhimi.lrc", duration: "03:54" },
-          { id: 5, title: "海屿你", artist: "马也", src: "./audio/haiyuni.mp3", cover: "./images/haiyuni.webp", lrcPath: "./lyrics/haiyuni.lrc", duration: "04:55" },
-          { id: 6, title: "心似烟火", artist: "陈壹千", src: "./audio/xinsi.mp3", cover: "./images/xinsi.webp", lrcPath: "./lyrics/xinsi.lrc", duration: "04:31" },
-          { id: 7, title: "旅行中忘记", artist: "袁娅维", src: "./audio/lvxing.mp3", cover: "./images/lvxing.webp", lrcPath: "./lyrics/lvxing.lrc", duration: "03:54" },
-          { id: 8, title: "等你的季节", artist: "刘诗诗", src: "./audio/dengni.mp3", cover: "./images/dengni.webp", lrcPath: "./lyrics/dengni.lrc", duration: "04:01" },
-          { id: 9, title: "东方神起", artist: "Mirotic", src: "./audio/dongfang.mp3", cover: "./images/dongfang.webp", lrcPath: "./lyrics/dongfang.lrc", duration: "03:27" },
-          { id: 10, title: "暖", artist: "方大同", src: "./audio/nuan.mp3", cover: "./images/nuan.webp", lrcPath: "./lyrics/nuan.lrc", duration: "03:44" },
-          { id: 11, title: "太聪明", artist: "欧阳娜娜", src: "./audio/taicongming.mp3", cover: "./images/taicongming.webp", lrcPath: "./lyrics/taicongming.lrc", duration: "04:36" }
+            { id: 1, title: "素颜", artist: "许嵩_何曼婷", src: "./audio/suyan.mp3", cover: "./images/suyan.webp", lrcPath: "./lyrics/suyan.lrc", duration: "03:58" },
+            { id: 2, title: "我用什么把你留住", artist: "福禄寿FloruitShow", src: "./audio/woyong.mp3", cover: "./images/woyong.webp", lrcPath: "./lyrics/woyong.lrc", duration: "05:30" },
+            { id: 3, title: "辜负", artist: "林小珂", src: "./audio/gufu.mp3", cover: "./images/gufu.webp", lrcPath: "./lyrics/gufu.lrc", duration: "03:23" },
+            { id: 4, title: "执迷不悟", artist: "小乐哥", src: "./audio/zhimi.mp3", cover: "./images/zhimi.webp", lrcPath: "./lyrics/zhimi.lrc", duration: "03:54" },
+            { id: 5, title: "海屿你", artist: "马也", src: "./audio/haiyuni.mp3", cover: "./images/haiyuni.webp", lrcPath: "./lyrics/haiyuni.lrc", duration: "04:55" },
+            { id: 6, title: "心似烟火", artist: "陈壹千", src: "./audio/xinsi.mp3", cover: "./images/xinsi.webp", lrcPath: "./lyrics/xinsi.lrc", duration: "04:31" },
+            { id: 7, title: "旅行中忘记", artist: "袁娅维", src: "./audio/lvxing.mp3", cover: "./images/lvxing.webp", lrcPath: "./lyrics/lvxing.lrc", duration: "03:54" },
+            { id: 8, title: "等你的季节", artist: "刘诗诗", src: "./audio/dengni.mp3", cover: "./images/dengni.webp", lrcPath: "./lyrics/dengni.lrc", duration: "04:01" },
+            { id: 9, title: "东方神起", artist: "Mirotic", src: "./audio/dongfang.mp3", cover: "./images/dongfang.webp", lrcPath: "./lyrics/dongfang.lrc", duration: "03:27" },
+            { id: 10, title: "暖", artist: "方大同", src: "./audio/nuan.mp3", cover: "./images/nuan.webp", lrcPath: "./lyrics/nuan.lrc", duration: "03:44" },
+            { id: 11, title: "太聪明", artist: "欧阳娜娜", src: "./audio/taicongming.mp3", cover: "./images/taicongming.webp", lrcPath: "./lyrics/taicongming.lrc", duration: "04:36" }
         ];
 
         const audio = document.getElementById('audio-player');
@@ -353,27 +1714,93 @@
         const pressStartText = document.getElementById('press-start-text');
 
         let curIdx = -1; let isPlaying = false; let isDragging = false; let parsedLrc = []; let curLrcIdx = -1; let noteInterval; let gameOverTimer;
+        let secretCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowLeft', 'ArrowRight', 'ArrowRight', 'b', 'a', 'b', 'a'];
+        let rhythmCode = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'a', 'b'];
+        let keyBuffer = [];
+        let logoClickCount = 0;
+        let poppedNotes = 0;
+        let rhythmGameActive = false; let rhythmScore = 0; let rhythmRAF; let tiles = []; let lastSpawnTime = 0; let currentRhythmSpeed = 2;
+
+        // 彩蛋状态机
+        let bootState = 'select'; // select -> coin -> cassette -> ready
+        let idleTimer;
+        const typeGreetings = [
+            "IT'S DANGEROUS TO GO ALONE!",
+            "THANK YOU MARIO!",
+            "ALL YOUR BASE ARE BELONG TO US",
+            "A WINNER IS YOU",
+            "PRESS START TO ROCK"
+        ];
+        let typeInterval;
+
+        // PiP 歌词相关变量
+        const pipCanvas = document.createElement('canvas');
+        pipCanvas.width = 800; pipCanvas.height = 200;
+        const pipCtx = pipCanvas.getContext('2d');
+        const pipVideo = document.createElement('video');
+        pipVideo.muted = true;
+        let pipActive = false;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioAnalyser; let audioDataArray; let mediaSourceNode;
+        function initAudioContext() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!mediaSourceNode) {
+                try {
+                    mediaSourceNode = audioCtx.createMediaElementSource(audio);
+                    audioAnalyser = audioCtx.createAnalyser();
+                    audioAnalyser.fftSize = 256;
+                    mediaSourceNode.connect(audioAnalyser);
+                    audioAnalyser.connect(audioCtx.destination);
+                    audioDataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+                } catch (e) { console.warn("Audio Context init failed", e); }
+            }
+        }
+
         function playBeep(freq = 880) {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = 'square'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(freq/2, audioCtx.currentTime + 0.05);
-            
+            osc.type = 'square'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freq / 2, audioCtx.currentTime + 0.05);
+
             // 保持强烈的 1.5 音量反馈
-            gain.gain.setValueAtTime(1.5, audioCtx.currentTime); 
+            gain.gain.setValueAtTime(1.5, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            
+
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playCoinSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'square'; osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function play1UpSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [1318.51, 1567.98, 2637.02, 2093.00, 2793.83, 3135.96];
+            let startTime = audioCtx.currentTime;
+            notes.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.type = 'square'; osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.3, startTime + i * 0.1);
+                gain.gain.linearRampToValueAtTime(0, startTime + i * 0.1 + 0.1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(startTime + i * 0.1); osc.stop(startTime + i * 0.1 + 0.1);
+            });
         }
 
         function init() {
             playlistCont.innerHTML = '';
             playlist.forEach((song, i) => {
                 const div = document.createElement('div'); div.className = 'song-item';
-                div.innerHTML = `<div class="song-title-wrapper"><span class="hover-pointer">👉</span><span>${(i+1).toString().padStart(2,'0')}. ${song.title}</span></div><div><span class="list-play-icon" id="list-icon-${i}">&#9654;</span><span>${song.duration}</span></div>`;
+                div.innerHTML = `<div class="song-title-wrapper"><span class="hover-pointer">👉</span><span>${(i + 1).toString().padStart(2, '0')}. ${song.title}</span></div><div><span class="list-play-icon" id="list-icon-${i}">&#9654;</span><span>${song.duration}</span></div>`;
                 div.onclick = () => { playBeep(1320); (curIdx === i) ? togglePlay() : select(i); };
                 playlistCont.appendChild(div);
             });
@@ -383,9 +1810,9 @@
             if (playlist.length === 0) return;
             let randomIdx;
             do { randomIdx = Math.floor(Math.random() * playlist.length); } while (randomIdx === curIdx && playlist.length > 1);
-            
+
             leftPlayerBody.classList.add('star-power-active');
-            playBeep(880); setTimeout(()=>playBeep(1100), 100); setTimeout(()=>playBeep(1320), 200);
+            playBeep(880); setTimeout(() => playBeep(1100), 100); setTimeout(() => playBeep(1320), 200);
             setTimeout(() => { leftPlayerBody.classList.remove('star-power-active'); }, 1500);
 
             select(randomIdx);
@@ -393,27 +1820,32 @@
 
         function marioJumpEffect() {
             marioPop.classList.remove('jump');
-            void marioPop.offsetWidth; 
+            void marioPop.offsetWidth;
             marioPop.classList.add('jump');
         }
 
         function select(i) {
-            if (curIdx !== -1 && curIdx !== i) {
-                marioJumpEffect();
-            }
+            if (curIdx !== -1 && curIdx !== i) marioJumpEffect();
 
             curIdx = i; const song = playlist[i];
-            
-            if (pressStartText) pressStartText.style.display = 'none';
+            bootState = 'ready'; clearInterval(typeInterval);
+            leftPlayerBody.classList.add('playing');
+            document.querySelectorAll('.arcade-view').forEach(el => el.style.display = 'none');
+            document.getElementById('turntable').style.display = 'flex';
+
+            // 修复未选择角色时直接放歌，强制回到红色
+            if (!document.body.classList.contains('mario-mode') && !document.body.classList.contains('luigi-mode') && !document.body.classList.contains('peach-mode')) {
+                document.body.classList.add('mario-mode');
+            }
 
             document.getElementById('current-title').innerText = song.title;
             document.getElementById('current-artist').innerText = song.artist;
             const coverImg = document.getElementById('current-cover');
             coverImg.src = song.cover; coverImg.style.opacity = 1;
             totalDurEl.innerText = song.duration; audio.src = song.src;
-            
+
             fetch(song.lrcPath).then(res => res.text()).then(text => { parsedLrc = parse(text); render(parsedLrc); })
-            .catch(() => { lrcWrapper.innerHTML = '<div class="global-lyric-line">暂无歌词</div>'; parsedLrc = []; });
+                .catch(() => { lrcWrapper.innerHTML = '<div class="global-lyric-line">暂无歌词</div>'; parsedLrc = []; });
             updateUI(); play();
         }
 
@@ -422,11 +1854,11 @@
             lines.forEach(line => {
                 const match = timeExp.exec(line);
                 if (match) {
-                    const t = parseInt(match[1])*60 + parseInt(match[2]) + (match[3].length===2 ? match[3]*10 : match[3]*1)/1000;
-                    const txt = line.replace(timeExp, '').trim(); if(txt) result.push({ time: t, text: txt });
+                    const t = parseInt(match[1]) * 60 + parseInt(match[2]) + (match[3].length === 2 ? match[3] * 10 : match[3] * 1) / 1000;
+                    const txt = line.replace(timeExp, '').trim(); if (txt) result.push({ time: t, text: txt });
                 }
             });
-            return result.sort((a,b) => a.time - b.time);
+            return result.sort((a, b) => a.time - b.time);
         }
 
         function render(lyrics) {
@@ -436,38 +1868,50 @@
         }
 
         // 🌟 动态检测屏幕宽度，确保歌词在手机上也能完美滚动居中
-        function scrollLrc(idx) { 
+        function scrollLrc(idx) {
             const isMobile = window.innerWidth <= 768;
             const h = isMobile ? 90 : 120; // 手机端蒙版高度90，电脑端120
             const lh = isMobile ? 30 : 40; // 手机端单行高度30，电脑端40
-            const offset = (h/2) - (lh/2) - (idx * lh); 
-            lrcWrapper.style.transform = `translateY(${offset}px)`; 
+            const offset = (h / 2) - (lh / 2) - (idx * lh);
+            lrcWrapper.style.transform = `translateY(${offset}px)`;
         }
-        
+
         function updateUI() {
             const items = document.querySelectorAll('.song-item');
             items.forEach((item, i) => {
                 item.classList.toggle('active', i === curIdx);
                 const icon = document.getElementById(`list-icon-${i}`);
-                if(icon) icon.innerHTML = (i === curIdx && isPlaying) ? '&#10074;&#10074;' : '&#9654;';
+                if (icon) icon.innerHTML = (i === curIdx && isPlaying) ? '&#10074;&#10074;' : '&#9654;';
             });
         }
-        
+
         function togglePlay() { if (curIdx === -1) return select(0); isPlaying ? pause() : play(); }
-        
+
         function spawnNote() {
             const note = document.createElement('div'); note.className = 'floating-note'; note.innerText = Math.random() > 0.5 ? '♪' : '♫';
             note.style.left = '50%'; note.style.top = '50%'; note.style.setProperty('--dir', Math.random() > 0.5 ? 1 : -1);
-            document.getElementById('record-player-bay').appendChild(note);
-            setTimeout(() => { if(note.parentNode) note.parentNode.removeChild(note); }, 2000);
+
+            note.onclick = (e) => {
+                e.stopPropagation(); note.remove();
+                playBeep(1500); poppedNotes++;
+                if (poppedNotes === 5) {
+                    poppedNotes = 0; play1UpSound();
+                    const trophy = document.createElement('div'); trophy.className = 'trophy-item'; trophy.innerHTML = '🏆';
+                    document.getElementById('trophy-cont').appendChild(trophy);
+                }
+            };
+
+            document.getElementById('note-bay').appendChild(note);
+            setTimeout(() => { if (note.parentNode) note.parentNode.removeChild(note); }, 2000);
         }
 
         function play() {
+            initAudioContext();
             audio.play(); isPlaying = true;
             document.getElementById('master-play-btn').innerHTML = '&#9208;';
             turntable.classList.add('playing'); tonearm.classList.add('playing');
-            lrcContainer.classList.add('show'); 
-            if(!noteInterval) noteInterval = setInterval(spawnNote, 600);
+            lrcContainer.classList.add('show');
+            if (!noteInterval) noteInterval = setInterval(spawnNote, 600);
             updateUI();
         }
 
@@ -475,7 +1919,7 @@
             audio.pause(); isPlaying = false;
             document.getElementById('master-play-btn').innerHTML = '&#9199;';
             turntable.classList.remove('playing'); tonearm.classList.remove('playing');
-            lrcContainer.classList.remove('show'); 
+            lrcContainer.classList.remove('show');
             clearInterval(noteInterval); noteInterval = null;
             updateUI();
         }
@@ -492,8 +1936,8 @@
                 let idx = parsedLrc.findIndex(l => l.time > audio.currentTime);
                 let active = idx === -1 ? parsedLrc.length - 1 : (idx === 0 ? 0 : idx - 1);
                 if (active !== curLrcIdx) {
-                    if (curLrcIdx !== -1) document.getElementById('lrc-'+curLrcIdx)?.classList.remove('active');
-                    document.getElementById('lrc-'+active)?.classList.add('active');
+                    if (curLrcIdx !== -1) document.getElementById('lrc-' + curLrcIdx)?.classList.remove('active');
+                    document.getElementById('lrc-' + active)?.classList.add('active');
                     scrollLrc(active); curLrcIdx = active;
                 }
             }
@@ -501,7 +1945,7 @@
 
         function showGameOver() {
             gameOverScreen.classList.add('show');
-            pause(); 
+            pause();
             playBeep(300); setTimeout(() => playBeep(250), 200); setTimeout(() => playBeep(200), 400);
 
             gameOverTimer = setTimeout(() => {
@@ -518,16 +1962,289 @@
 
         audio.onended = showGameOver;
 
-        function format(s) { if (isNaN(s)) return "00:00"; const m = Math.floor(s/60); const sec = Math.floor(s%60); return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
-        function seek(e) { const w = progCont.clientWidth; const x = Math.max(0, Math.min(e.offsetX, w)); if (audio.duration) { const time = (x/w) * audio.duration; progBar.style.width = (x/w)*100 + '%'; curTimeEl.innerText = format(time); return time; } return 0; }
-        progCont.onmousedown = (e) => { if(curIdx === -1) return; isDragging = true; seek(e); }; 
-        window.onmousemove = (e) => { if (isDragging) { const rect = progCont.getBoundingClientRect(); seek({ offsetX: e.clientX - rect.left }); } }; 
+        function renderPip() {
+            if (!document.pictureInPictureElement) { pipActive = false; return; }
+            pipCtx.fillStyle = '#000000'; pipCtx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+
+            // 绘制旋转封面
+            const coverImg = document.getElementById('current-cover');
+            if (coverImg && coverImg.complete && coverImg.naturalWidth !== 0) {
+                pipCtx.save();
+                pipCtx.translate(100, 100);
+                pipCtx.rotate((audio.currentTime * 30 * Math.PI) / 180);
+                pipCtx.beginPath(); pipCtx.arc(0, 0, 80, 0, 2 * Math.PI); pipCtx.clip();
+                pipCtx.drawImage(coverImg, -80, -80, 160, 160);
+                pipCtx.beginPath(); pipCtx.arc(0, 0, 15, 0, 2 * Math.PI); pipCtx.fillStyle = '#111'; pipCtx.fill();
+                pipCtx.strokeStyle = '#333'; pipCtx.lineWidth = 2; pipCtx.stroke();
+                pipCtx.restore();
+            }
+
+            if (parsedLrc.length === 0) {
+                pipCtx.fillStyle = '#FFFFFF'; pipCtx.font = '30px "DotGothic16", sans-serif';
+                pipCtx.textAlign = 'center'; pipCtx.fillText('暂无歌词...', 450, 100);
+            } else {
+                pipCtx.textAlign = 'left'; pipCtx.textBaseline = 'middle';
+                let cur = curLrcIdx >= 0 ? parsedLrc[curLrcIdx].text : '';
+                let prev = curLrcIdx > 0 ? parsedLrc[curLrcIdx - 1].text : '';
+                let next = curLrcIdx < parsedLrc.length - 1 ? parsedLrc[curLrcIdx + 1].text : '';
+
+                pipCtx.fillStyle = 'rgba(255, 255, 255, 0.4)'; pipCtx.font = '20px "DotGothic16", sans-serif';
+                pipCtx.fillText(prev, 220, 40);
+
+                pipCtx.fillStyle = '#FFDE00'; pipCtx.font = 'bold 32px "DotGothic16", sans-serif';
+                pipCtx.shadowColor = 'black'; pipCtx.shadowOffsetX = 3; pipCtx.shadowOffsetY = 3;
+                pipCtx.fillText(cur, 220, 100);
+                pipCtx.shadowColor = 'transparent';
+
+                pipCtx.fillStyle = 'rgba(255, 255, 255, 0.4)'; pipCtx.font = '20px "DotGothic16", sans-serif';
+                pipCtx.fillText(next, 220, 160);
+            }
+            if (pipActive) requestAnimationFrame(renderPip);
+        }
+
+        async function togglePip() {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+                pipActive = false;
+            } else {
+                pipVideo.srcObject = pipCanvas.captureStream(30);
+                await pipVideo.play();
+                await pipVideo.requestPictureInPicture();
+                pipActive = true;
+                renderPip();
+            }
+        }
+
+        function format(s) { if (isNaN(s)) return "00:00"; const m = Math.floor(s / 60); const sec = Math.floor(s % 60); return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`; }
+        function seek(e) { const w = progCont.clientWidth; const x = Math.max(0, Math.min(e.offsetX, w)); if (audio.duration) { const time = (x / w) * audio.duration; progBar.style.width = (x / w) * 100 + '%'; curTimeEl.innerText = format(time); return time; } return 0; }
+        progCont.onmousedown = (e) => { if (curIdx === -1) return; isDragging = true; seek(e); };
+        window.onmousemove = (e) => {
+            if (isDragging) { const rect = progCont.getBoundingClientRect(); seek({ offsetX: e.clientX - rect.left }); }
+            resetIdle();
+            // 波纹特效 (彩蛋7)
+            if (curIdx === -1 && e.movementX !== undefined) {
+                const speed = Math.min(100, Math.abs(e.movementX) * 2);
+                progBar.style.width = speed + '%';
+            }
+        };
         window.onmouseup = (e) => { if (isDragging) { isDragging = false; const rect = progCont.getBoundingClientRect(); audio.currentTime = seek({ offsetX: e.clientX - rect.left }); } };
-        
+
+        // 挂机屏保 (彩蛋3)
+        function resetIdle() {
+            document.getElementById('screensaver').classList.remove('active');
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                if (curIdx === -1) document.getElementById('screensaver').classList.add('active');
+            }, 10000);
+        }
+        window.onclick = resetIdle; window.onkeydown = resetIdle; resetIdle();
+
+        // 秘籍输入逻辑
+        let konamiIndex = 0;
+        let rhythmIndex = 0;
+        function inputDpad(key) {
+            let correctKonami = false; let correctRhythm = false;
+
+            if (key.toLowerCase() === secretCode[konamiIndex].toLowerCase()) {
+                correctKonami = true; konamiIndex++;
+                if (konamiIndex === secretCode.length) {
+                    konamiIndex = 0; rhythmIndex = 0;
+                    document.body.className = ''; document.body.classList.add('peach-mode');
+                    play1UpSound(); toggleDpadModal(false); return;
+                }
+            } else { konamiIndex = 0; }
+
+            if (key.toLowerCase() === rhythmCode[rhythmIndex].toLowerCase()) {
+                correctRhythm = true; rhythmIndex++;
+                if (rhythmIndex === rhythmCode.length) {
+                    konamiIndex = 0; rhythmIndex = 0; toggleDpadModal(false);
+                    if (isPlaying) startRhythmGame();
+                    else playBeep(200); // 必须在播放时才能进入
+                    return;
+                }
+            } else { rhythmIndex = 0; }
+
+            if (correctKonami || correctRhythm) { playBeep(1500); }
+            else { playBeep(200); }
+        }
+
+        function toggleDpadModal(show) {
+            document.getElementById('dpad-modal').style.display = show ? 'flex' : 'none';
+            konamiIndex = 0; rhythmIndex = 0; // 重置输入
+            const bubble = document.getElementById('mario-bubble');
+            if (show && isPlaying && lrcContainer.classList.contains('show')) {
+                bubble.classList.add('show');
+            } else {
+                bubble.classList.remove('show');
+            }
+        }
+
+        // 手机端动态移动 D-Pad
+        if (window.innerWidth <= 768) {
+            document.querySelector('.right-playlist').appendChild(document.getElementById('dpad-toggle'));
+        }
+
+        // 街机状态机
+        function selectAvatar(char) {
+            playBeep(1320);
+            document.body.className = ''; // 重置主题
+            if (char === 'mario') document.body.classList.add('mario-mode');
+            if (char === 'luigi') document.body.classList.add('luigi-mode');
+
+            document.getElementById('view-select').style.display = 'none';
+            document.getElementById('view-coin').style.display = 'flex';
+            bootState = 'coin';
+        }
+
+        function insertCoin() {
+            playCoinSound();
+            document.getElementById('view-coin').style.display = 'none';
+            document.getElementById('view-cassette').style.display = 'flex';
+            bootState = 'cassette';
+        }
+
+        function pressStart() {
+            if (bootState !== 'cassette') return;
+            playBeep(880); bootState = 'loading';
+            document.getElementById('deck').classList.add('loading');
+
+            // 震动特效
+            document.getElementById('record-player-bay').style.animation = 'logoJump 0.2s 3';
+
+            setTimeout(() => {
+                document.getElementById('view-cassette').style.display = 'none';
+                document.getElementById('turntable').style.display = 'block';
+                bootState = 'ready';
+                clearInterval(typeInterval);
+                leftPlayerBody.classList.add('playing');
+                select(0); // 自动播放第一首歌
+            }, 1000);
+        }
+
+        // 打字机特效 (彩蛋9)
+        function typeWriter() {
+            const titleEl = document.getElementById('current-title');
+            const str = typeGreetings[Math.floor(Math.random() * typeGreetings.length)];
+            let i = 0; titleEl.innerText = '';
+            clearInterval(typeInterval);
+            typeInterval = setInterval(() => {
+                if (curIdx !== -1) return clearInterval(typeInterval);
+                titleEl.innerText = str.substring(0, i) + '_';
+                i++;
+                if (i > str.length) { clearInterval(typeInterval); setTimeout(typeWriter, 3000); }
+            }, 100);
+        }
+
+        // CRT动画结束后启动打字机
+        setTimeout(() => { if (curIdx === -1) typeWriter(); document.getElementById('crt-boot').remove(); }, 1200);
+
         // 监听屏幕大小变化，动态刷新歌词位置
         window.addEventListener('resize', () => { if (curLrcIdx !== -1) scrollLrc(curLrcIdx); });
+
+        // --- 节奏钢琴块小游戏 ---
+        function startRhythmGame() {
+            if (!audioAnalyser) return;
+            rhythmGameActive = true; rhythmScore = 0; currentRhythmSpeed = 2; document.getElementById('rhythm-score').innerText = 'COMBO: 0';
+            document.getElementById('rhythm-game').style.display = 'flex';
+            tiles.forEach(t => t.el.remove()); tiles = [];
+            lastSpawnTime = audioCtx.currentTime;
+            rhythmLoop();
+        }
+
+        function stopRhythmGame() {
+            rhythmGameActive = false; cancelAnimationFrame(rhythmRAF);
+            document.getElementById('rhythm-game').style.display = 'none';
+            tiles.forEach(t => t.el.remove()); tiles = [];
+        }
+
+        function rhythmLoop() {
+            if (!rhythmGameActive || !isPlaying) return stopRhythmGame();
+            rhythmRAF = requestAnimationFrame(rhythmLoop);
+
+            audioAnalyser.getByteFrequencyData(audioDataArray);
+            let bassSum = 0; for (let i = 0; i < 10; i++) bassSum += audioDataArray[i];
+            let bassAvg = bassSum / 10;
+            const now = audioCtx.currentTime;
+
+            if (bassAvg > 200 && now - lastSpawnTime > 0.4) {
+                spawnRhythmTile(); lastSpawnTime = now;
+            }
+
+            const h = document.getElementById('rhythm-lanes').clientHeight;
+            for (let i = tiles.length - 1; i >= 0; i--) {
+                const t = tiles[i]; t.y += currentRhythmSpeed; t.el.style.top = t.y + 'px';
+                if (t.y > h + 30) {
+                    t.el.remove(); tiles.splice(i, 1); failRhythmGame();
+                }
+            }
+        }
+
+        function spawnRhythmTile() {
+            const laneIdx = Math.floor(Math.random() * 4);
+            const lane = document.querySelectorAll('.rhythm-lane')[laneIdx];
+            const tileEl = document.createElement('div');
+            tileEl.className = 'rhythm-tile';
+            const tObj = { el: tileEl, y: -80, clicked: false, laneIdx: laneIdx };
+
+            tileEl.onmousedown = (e) => {
+                if (e) e.stopPropagation();
+                if (tObj.clicked) return;
+                tObj.clicked = true; playBeep(1200); rhythmScore++;
+                currentRhythmSpeed = Math.min(4, currentRhythmSpeed + 0.05);
+                document.getElementById('rhythm-score').innerText = 'COMBO: ' + rhythmScore;
+                tileEl.style.transform = 'scale(0)';
+                setTimeout(() => tileEl.remove(), 100);
+                tiles = tiles.filter(x => x !== tObj);
+            };
+            lane.appendChild(tileEl); tiles.push(tObj);
+        }
+
+        function failRhythmGame() {
+            playBeep(100);
+            const rGame = document.getElementById('rhythm-game');
+            rGame.style.background = 'rgba(255, 0, 0, 0.5)';
+            setTimeout(() => { rGame.style.background = 'rgba(0,0,0,0.9)'; stopRhythmGame(); }, 300);
+            setTimeout(() => alert("GAME OVER!\n最终 COMBO: " + rhythmScore), 50);
+        }
+
+        // 彩蛋 1：键盘秘籍监听及游戏操作
+        window.addEventListener('keydown', (e) => {
+            if (rhythmGameActive) {
+                const laneKeys = ['d', 'f', 'j', 'k'];
+                const idx = laneKeys.indexOf(e.key.toLowerCase());
+                if (idx !== -1) {
+                    const laneTiles = tiles.filter(t => t.laneIdx === idx && !t.clicked);
+                    if (laneTiles.length > 0) {
+                        laneTiles.sort((a, b) => b.y - a.y);
+                        laneTiles[0].el.onmousedown();
+                    }
+                }
+            } else {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'a') {
+                    inputDpad(e.key);
+                }
+            }
+        });
+
+        // 彩蛋 2：点击 Logo
+        const logoEl = document.querySelector('.mario-hello-logo');
+        logoEl.addEventListener('click', () => {
+            logoEl.classList.remove('jump'); void logoEl.offsetWidth; logoEl.classList.add('jump');
+            logoClickCount++;
+            if (logoClickCount >= 5) {
+                logoClickCount = 0; play1UpSound();
+                const shroom = document.createElement('div'); shroom.innerHTML = '🍄';
+                shroom.style.position = 'absolute'; shroom.style.left = '20px'; shroom.style.top = '-20px';
+                shroom.style.fontSize = '30px'; shroom.style.animation = 'floatUp 1s forwards';
+                logoEl.parentElement.appendChild(shroom);
+                setTimeout(() => shroom.remove(), 1000);
+            } else {
+                playCoinSound();
+            }
+        });
 
         init();
     </script>
 </body>
+
 </html>
